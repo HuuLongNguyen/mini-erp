@@ -1,0 +1,12 @@
+{
+  "appId": "aa029a30-f1bf-4c7d-952f-39f91de5da36",
+  "appDisplayName": "MiniERP",
+  "description": null,
+  "environmentId": "a147a6c4-f236-e44a-adaf-6286ec35c99a",
+  "buildPath": "dist",
+  "buildEntryPoint": "index.html",
+  "logoPath": "Default",
+  "localAppUrl": "http://localhost:5173",
+  "connectionReferences": {},
+  "databaseReferences": {}
+}
