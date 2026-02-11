@@ -92,7 +92,7 @@ export default function EmployeeProfile({
 
                             <Col md={6}>
                                 <Form.Group>
-                                    <Form.Label className="input-label">Agreed Initial Project Budget</Form.Label>
+                                    <Form.Label className="input-label">Agreed Initial Project Budget.</Form.Label>
                                     <InputGroup className="custom-input-group">
                                         <Form.Control required name="initialBudget" type="number" placeholder="50000000" className="glass-input" />
                                         <InputGroup.Text className="glass-input-addon">VND</InputGroup.Text>
@@ -101,7 +101,7 @@ export default function EmployeeProfile({
                             </Col>
                             <Col md={6}>
                                 <Form.Group>
-                                    <Form.Label className="input-label">Agreed Initial Salary</Form.Label>
+                                    <Form.Label className="input-label">Agreed Initial Salary.</Form.Label>
                                     <InputGroup className="custom-input-group">
                                         <Form.Control required name="initialSalary" type="number" placeholder="25000000" className="glass-input" />
                                         <InputGroup.Text className="glass-input-addon">VND</InputGroup.Text>

@@ -9,7 +9,7 @@ interface PaymentHistoryTableProps {
 export default function PaymentHistoryTable({ history }: PaymentHistoryTableProps) {
     if (!history || history.length === 0) {
         return (
-            <div className="text-center text-muted py-4">
+            <div className="text-center text-white py-4">
                 <i className="bi bi-clock-history fs-2 mb-2 d-block"></i>
                 No payment history available. Use the calculator to add a record.
             </div>

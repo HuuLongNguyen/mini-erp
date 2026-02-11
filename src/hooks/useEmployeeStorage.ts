@@ -1,69 +1,159 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '../utils/supabaseClient';
 import type { Employee, PaymentRecord } from '../types/employee';
 import type { SalaryResult } from '../types/salary';
-
-const STORAGE_KEY = 'miniERP_employees';
 
 export function useEmployeeStorage() {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [currentEmployeeId, setCurrentEmployeeId] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    // Load from LocalStorage
+    // Load from Supabase
     useEffect(() => {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-            try {
-                setEmployees(JSON.parse(saved));
-            } catch (e) {
-                console.error('Failed to parse employees', e);
-            }
-        }
+        fetchEmployees();
     }, []);
 
-    // Sync to LocalStorage
-    useEffect(() => {
-        if (employees.length > 0) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(employees));
-        }
-    }, [employees]);
+    const fetchEmployees = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('employees')
+                .select(`
+                    *,
+                    history:payment_history(*)
+                `)
+                .order('name');
+            
+            if (error) throw error;
 
-    const addEmployee = (employee: Omit<Employee, 'id' | 'history'>) => {
-        const newEmployee: Employee = {
-            ...employee,
-            id: crypto.randomUUID(),
-            history: [],
-        };
-        setEmployees([...employees, newEmployee]);
-        setCurrentEmployeeId(newEmployee.id);
-        return newEmployee.id;
-    };
-
-    const updateEmployee = (id: string, updates: Partial<Omit<Employee, 'id' | 'history'>>) => {
-        setEmployees(employees.map(emp =>
-            emp.id === id ? { ...emp, ...updates } : emp
-        ));
-    };
-
-    const addPaymentRecord = (employeeId: string, result: SalaryResult, input: { initialBudget: number, currentBudget: number, initialSalary: number }) => {
-        const newRecord: PaymentRecord = {
-            id: crypto.randomUUID(),
-            date: new Date().toISOString(),
-            initialBudget: input.initialBudget,
-            currentBudget: input.currentBudget,
-            initialSalary: input.initialSalary,
-            finalSalary: result.currentSalary,
-            budgetRatio: result.budgetRatio,
-        };
-
-        setEmployees(employees.map(emp => {
-            if (emp.id === employeeId) {
-                return {
-                    ...emp,
-                    history: [newRecord, ...emp.history] // Newest first
-                };
+            if (data) {
+                // Map database columns (snake_case) to application types (camelCase)
+                const mappedEmployees: Employee[] = data.map((emp: any) => ({
+                    id: emp.id,
+                    name: emp.name,
+                    email: emp.email,
+                    bankAccount: emp.bank_account,
+                    bankAccountHolder: emp.bank_account_holder,
+                    initialBudget: emp.initial_budget,
+                    initialSalary: emp.initial_salary,
+                    history: (emp.history || []).map((h: any) => ({
+                        id: h.id,
+                        date: h.date,
+                        initialBudget: h.initial_budget,
+                        currentBudget: h.current_budget,
+                        initialSalary: h.initial_salary,
+                        finalSalary: h.final_salary,
+                        budgetRatio: h.budget_ratio
+                    })).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                }));
+                setEmployees(mappedEmployees);
             }
-            return emp;
-        }));
+        } catch (error) {
+            console.error('Error fetching employees:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const addEmployee = async (employee: Omit<Employee, 'id' | 'history'>) => {
+        try {
+            const { data, error } = await supabase
+                .from('employees')
+                .insert([{
+                    name: employee.name,
+                    email: employee.email,
+                    bank_account: employee.bankAccount,
+                    bank_account_holder: employee.bankAccountHolder,
+                    initial_budget: employee.initialBudget,
+                    initial_salary: employee.initialSalary
+                }])
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            if (data) {
+                const newEmployee: Employee = {
+                    ...employee,
+                    id: data.id, // Use ID from DB
+                    history: [],
+                };
+                setEmployees(prev => [...prev, newEmployee]);
+                setCurrentEmployeeId(newEmployee.id);
+                return newEmployee.id;
+            }
+        } catch (error) {
+            console.error('Error adding employee:', error);
+            return null;
+        }
+    };
+
+    const updateEmployee = async (id: string, updates: Partial<Omit<Employee, 'id' | 'history'>>) => {
+        try {
+            const dbUpdates: any = {};
+            if (updates.name) dbUpdates.name = updates.name;
+            if (updates.email) dbUpdates.email = updates.email;
+            if (updates.bankAccount) dbUpdates.bank_account = updates.bankAccount;
+            if (updates.bankAccountHolder) dbUpdates.bank_account_holder = updates.bankAccountHolder;
+            if (updates.initialBudget) dbUpdates.initial_budget = updates.initialBudget;
+            if (updates.initialSalary) dbUpdates.initial_salary = updates.initialSalary;
+
+            const { error } = await supabase
+                .from('employees')
+                .update(dbUpdates)
+                .eq('id', id);
+
+            if (error) throw error;
+
+            setEmployees(employees.map(emp =>
+                emp.id === id ? { ...emp, ...updates } : emp
+            ));
+        } catch (error) {
+            console.error('Error updating employee:', error);
+        }
+    };
+
+    const addPaymentRecord = async (employeeId: string, result: SalaryResult, input: { initialBudget: number, currentBudget: number, initialSalary: number }) => {
+        try {
+            const { data, error } = await supabase
+                .from('payment_history')
+                .insert([{
+                    employee_id: employeeId,
+                    date: new Date().toISOString(),
+                    initial_budget: input.initialBudget,
+                    current_budget: input.currentBudget,
+                    initial_salary: input.initialSalary,
+                    final_salary: result.currentSalary,
+                    budget_ratio: result.budgetRatio
+                }])
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            if (data) {
+                const newRecord: PaymentRecord = {
+                    id: data.id,
+                    date: data.date,
+                    initialBudget: data.initial_budget,
+                    currentBudget: data.current_budget,
+                    initialSalary: data.initial_salary,
+                    finalSalary: data.final_salary,
+                    budgetRatio: data.budget_ratio,
+                };
+
+                setEmployees(employees.map(emp => {
+                    if (emp.id === employeeId) {
+                        return {
+                            ...emp,
+                            history: [newRecord, ...emp.history]
+                        };
+                    }
+                    return emp;
+                }));
+            }
+        } catch (error) {
+            console.error('Error adding payment record:', error);
+        }
     };
 
     const currentEmployee = employees.find(e => e.id === currentEmployeeId) || null;
@@ -75,6 +165,7 @@ export function useEmployeeStorage() {
         setCurrentEmployeeId,
         addEmployee,
         updateEmployee,
-        addPaymentRecord
+        addPaymentRecord,
+        loading
     };
 }

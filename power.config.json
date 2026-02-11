@@ -8,5 +8,6 @@
   "logoPath": "Default",
   "localAppUrl": "http://localhost:5173",
   "connectionReferences": {},
-  "databaseReferences": {}
+  "databaseReferences": {},
+  "region":"prod"
 }

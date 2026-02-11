@@ -162,7 +162,7 @@ body {
 }
 
 .card-section-title {
-  color: #e2e8f0;
+  color: #fff;
   font-weight: 600;
   letter-spacing: 0.025em;
   text-transform: uppercase;
@@ -501,26 +501,27 @@ body {
 }
 
 .glass-table {
-  color: #cbd5e1;
+  color: #fff !important;
 }
 
 .glass-table th {
-  background: rgba(30, 41, 59, 0.8);
+  background: rgba(30, 41, 59, 0.8) !important;
   font-weight: 500;
   text-transform: uppercase;
   font-size: 0.75rem;
   letter-spacing: 0.05em;
-  color: #94a3b8;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
   padding: 1rem;
 }
 
 .glass-table td {
-  background: rgba(30, 41, 59, 0.4);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(30, 41, 59, 0.4) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
   padding: 1rem;
   vertical-align: middle;
   font-size: 0.9rem;
+  color: #fff !important;
 }
 
 .glass-table tr:last-child td {

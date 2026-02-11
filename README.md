@@ -13,20 +13,56 @@ This project uses the `@microsoft/power-apps-vite` plugin to bridge React develo
 - **Language:** TypeScript
 - **Styling:** Bootstrap 5 & React-Bootstrap
 - **Platforms:** Power Platform (Power Apps)
+- **Database:** Supabase (PostgreSQL)
 
 ## 🏗️ Development Setup
 
 ### Prerequisites
 
 1.  **Node.js:** Ensure you have the latest LTS version installed.
-2.  **Power Platform CLI (pac):** Required for deployment.
+2.  **Supabase Account:** Create a project at [supabase.com](https://supabase.com).
+3.  **Power Platform CLI (pac):** Required for deployment (optional if running locally only).
     ```bash
     pac install
     ```
-3.  **Authentication:** Authenticate with your Power Platform environment.
+4.  **Authentication:** Authenticate with your Power Platform environment.
     ```bash
     pac auth create --url https://<your-org>.crm.dynamics.com
     ```
+
+### Supabase Setup
+
+1.  Create a new Supabase project.
+2.  Go to the **SQL Editor** and run the following script to create the tables:
+
+    ```sql
+    -- Create Employees Table
+    create table employees (
+      id uuid default gen_random_uuid() primary key,
+      name text not null,
+      email text,
+      bank_account text,
+      bank_account_holder text,
+      initial_budget numeric,
+      initial_salary numeric,
+      created_at timestamptz default now()
+    );
+
+    -- Create Payment History Table
+    create table payment_history (
+      id uuid default gen_random_uuid() primary key,
+      employee_id uuid references employees(id) on delete cascade not null,
+      date timestamptz default now(),
+      initial_budget numeric,
+      current_budget numeric,
+      initial_salary numeric,
+      final_salary numeric,
+      budget_ratio numeric
+    );
+    ```
+
+3.  Copy `.env.example` to `.env`.
+4.  Get your **Project URL** and **Anon Key** from Supabase (Project Settings > API) and add them to `.env`.
 
 ### Installation
 
@@ -93,4 +129,3 @@ export default defineConfig([
     },
   },
 ])
-```
